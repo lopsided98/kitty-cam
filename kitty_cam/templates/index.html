@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <title>KittyCam</title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tachyons.min.css') }}">
 
     <link rel="stylesheet" href="https://vjs.zencdn.net/7.1.0/video-js.css"
           integrity="sha384-jq1L3HlUeAt7yDCifvJTOXSqoKsyIRmRcXeK9PqkdBRWjGO4Phb27xCgPTFoWNOH" crossorigin="anonymous">
@@ -15,8 +19,10 @@
 <body>
 
 <video id="player" class="video-js vjs-default-skin" autoplay height="360" width="640" controls preload="none">
-    <source src="http://192.168.1.28/hls/stream.m3u8" type="application/x-mpegURL"/>
+    <source src="/hls/stream.m3u8" type="application/x-mpegURL"/>
 </video>
+<br>
+<canvas style="user-select: none;" id="joystick" width="200" height="200"></canvas>
 
 </body>
 </html>

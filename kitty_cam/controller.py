@@ -12,7 +12,8 @@ _log = logging.getLogger(__name__)
 
 app = flask.Flask(__name__)
 app.config.update({
-    'LIRCD_SOCKET': '/run/lircd/lircd.sock',
+    'LIRCD_SOCKET': '/run/lirc/lircd',
+    'HLS_DIR': '/tmp/hls'
 })
 app.config.from_envvar('KITTY_CAM_SETTINGS', silent=True)
 
@@ -28,7 +29,11 @@ logging.getLogger(__package__).setLevel(log_level)
 # Allow cross-origin requests
 flask_cors.CORS(app)
 
-_turret = kitty_cam.turret.Turret(socket=app.config['LIRCD_SOCKET'])
+
+@app.before_first_request
+def init():
+    global _turret
+    _turret = kitty_cam.turret.Turret(socket=app.config['LIRCD_SOCKET'])
 
 
 @app.route('/')
@@ -41,3 +46,15 @@ def move():
     command = request.get_json()
     _turret.move(command['pan_speed'], command['tilt_speed'])
     return '', 204
+
+
+# Only used while testing
+
+@app.route('/hls/stream.m3u8')
+def hls_playlist():
+    return flask.send_from_directory(app.config['HLS_DIR'], 'stream.m3u8', mimetype='application/vnd.apple.mpegurl')
+
+
+@app.route('/hls/<segment>.ts')
+def hls_segment(segment):
+    return flask.send_from_directory(app.config['HLS_DIR'], segment + '.ts', mimetype='video/mp2t')
