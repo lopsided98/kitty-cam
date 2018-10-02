@@ -1,0 +1,23 @@
+.us-none {
+    user-select: none;
+}
+
+.max-h-100 {
+    max-height: 100%;
+}
+
+/* Fix glow with touch */
+.glow:active {
+    transition: opacity .15s ease-in
+}
+
+/* Make player fill screen */
+#player {
+    position: fixed;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+}

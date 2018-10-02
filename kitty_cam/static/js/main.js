@@ -7,8 +7,18 @@ class Joystick {
         this.ctx = element.getContext('2d');
         this.onjoystickmove = null;
         this.wasEnabled = false;
-        element.onmousedown = element.onmousemove = element.onmouseup = element.onmouseout = this.handleMouse.bind(this);
-        element.ontouchstart = element.ontouchmove = element.ontouchend = element.ontouchcancel = this.handleTouch.bind(this);
+
+        const handleMouse = this.handleMouse.bind(this);
+        element.addEventListener('mousedown', handleMouse);
+        element.addEventListener('mousemove', handleMouse);
+        element.addEventListener('mouseup', handleMouse);
+        element.addEventListener('mouseout', handleMouse);
+
+        const handleTouch = this.handleTouch.bind(this);
+        element.addEventListener('touchstart', handleTouch);
+        element.addEventListener('touchmove', handleTouch);
+        element.addEventListener('touchend', handleTouch);
+        element.addEventListener('touchcancel', handleTouch);
 
         window.requestAnimationFrame(this.draw.bind(this, false, 0, 0));
     }
@@ -26,11 +36,11 @@ class Joystick {
             enabled = true;
             const touch = e.touches[0];
             const canvasRect = e.target.getBoundingClientRect();
-            x = touch.pageX - canvasRect.left;
-            y = touch.pageY - canvasRect.top;
+            x = touch.clientX - canvasRect.left;
+            y = touch.clientY - canvasRect.top;
         }
         this.update(x, y, enabled);
-        e.preventDefault()
+        e.preventDefault();
     }
 
     update(xPos, yPos, enabled) {
@@ -54,13 +64,11 @@ class Joystick {
             if (mag > maxMag) {
                 x = x / mag * maxMag;
                 y = y / mag * maxMag;
-                mag = maxMag;
             }
 
             if (this.onjoystickmove) {
                 this.onjoystickmove(x / maxMag, y / maxMag);
             }
-
         } else {
             x = y = 0;
             if (this.wasEnabled && this.onjoystickmove) {
@@ -73,8 +81,9 @@ class Joystick {
     }
 
     draw(enabled, x, y, timestamp) {
-        const width = this.ctx.canvas.width;
-        const height = this.ctx.canvas.height;
+        const size = Math.min(this.ctx.canvas.clientWidth, this.ctx.canvas.clientHeight);
+        const width = this.ctx.canvas.width = size;
+        const height = this.ctx.canvas.height = size;
 
         const centerX = width / 2;
         const centerY = height / 2;
@@ -100,16 +109,46 @@ class Joystick {
     }
 }
 
+class JoystickComponent extends videojs.getComponent('Component') {
+    constructor(player, options) {
+        super(player, options);
+        this.joystick = new Joystick(this.el_);
+        this.joystick.onjoystickmove = (x, y) => {
+            this.trigger('joystickmove', {
+                x: x,
+                y: y
+            });
+        }
+    }
+
+    buildCSSClass() {
+        return `us-none absolute bottom-2 right-1 w-20 o-30 glow ${super.buildCSSClass()}`;
+    }
+
+    createEl() {
+        const props = {
+            className: this.buildCSSClass()
+        };
+        const attributes = {
+            width: 300,
+            height: 300,
+        };
+        return super.createEl('canvas', props, attributes);
+    }
+}
+
+videojs.registerComponent('Joystick', JoystickComponent);
+
 window.onload = () => {
     // Stream player
-    videojs('#player');
+    const player = videojs('#player');
+    const joystick = player.addChild('Joystick');
 
     const turret = new Turret();
-    const joystick = new Joystick(document.getElementById('joystick'));
 
-    joystick.onjoystickmove = (x, y) => {
-        x = Math.round(x * 7);
-        y = Math.round(y * 7);
+    joystick.on('joystickmove', (e, data) => {
+        const x = Math.round(data.x * 7);
+        const y = Math.round(data.y * 7);
         turret.move(x, y);
-    }
+    });
 };

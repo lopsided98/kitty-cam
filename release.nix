@@ -31,7 +31,7 @@
 
     build = pkgs.python3Packages.buildPythonPackage rec {
       pname = "kitty-cam";
-      version = "0.1";
+      version = "0.2";
 
       src = "${jobs.tarball}/tarballs/kitty-cam-${version}.tar.gz";
 
