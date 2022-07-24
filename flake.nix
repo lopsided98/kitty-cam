@@ -8,10 +8,10 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     with flake-utils.lib;
-    eachSystem allSystems (system: let
+    eachSystem defaultSystems (system: let
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ self.overlay ];
+        overlays = [ self.overlays.default ];
       };
     in {
       packages = rec {
@@ -25,8 +25,10 @@
       };
     }) //
     {
-      overlay = final: prev: {
+      overlays.default = final: prev: {
         kitty-cam = final.python3Packages.callPackage ./. { };
       };
+
+      nixosModules.default = import ./module.nix;
     };
 }
